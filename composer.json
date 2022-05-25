@@ -1,0 +1,13 @@
+{
+    "name": "cleandev/boix_mdf",
+    "autoload": {
+        "psr-4": {
+            "Cleandev\\BoixMdf\\": "src/"
+        }
+    },
+    "authors": [{
+        "name": "vexi",
+        "email": "kvdouglace@gmail.com"
+    }],
+    "require": {}
+}

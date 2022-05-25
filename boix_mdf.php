@@ -28,9 +28,28 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+if (file_exists(_PS_MODULE_DIR_. 'boix_mdf/vendor/autoload.php')) {
+    require_once _PS_MODULE_DIR_.  'boix_mdf/vendor/autoload.php';
+}
+
 class Boix_mdf extends Module
 {
     protected $config_form = false;
+
+    /**
+     * @param array $tabs
+     */
+    public $tabs;
+
+    /**
+     * @param Cleandev\BoixMdf\Repository $repository
+     */
+    protected $repository;
+
+    /**
+     * @param array $languages
+     */
+    protected $languages;
 
     public function __construct()
     {
@@ -45,8 +64,19 @@ class Boix_mdf extends Module
          */
         $this->bootstrap = true;
 
+        $this->tabs = array(
+            array(
+                'name'=> $this->l('Equipe'),
+                'class_name'=>'AdminBoixEquipe',
+                'parent'=>'AdminParentStores',
+            ),
+        );
+
+        $this->repository = new Cleandev\BoixMdf\Repository($this); 
+    
         parent::__construct();
 
+        $this->languages = Language::getLanguages();
         $this->displayName = $this->l('Gestion des magasins');
         $this->description = $this->l('Gestion des magasins');
 
@@ -59,18 +89,12 @@ class Boix_mdf extends Module
      */
     public function install()
     {
-        Configuration::updateValue('BOIX_MDF_LIVE_MODE', false);
-
-        return parent::install() &&
-            $this->registerHook('header') &&
-            $this->registerHook('backOfficeHeader');
+        return parent::install() && $this->repository->install();
     }
 
     public function uninstall()
     {
-        Configuration::deleteByName('BOIX_MDF_LIVE_MODE');
-
-        return parent::uninstall();
+        return parent::uninstall() && $this->repository->uninstall();
     }
 
     /**
