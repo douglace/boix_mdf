@@ -35,8 +35,14 @@ use Db;
 class Repository
 {
 
+    public static $img_promo_dir = _PS_IMG_DIR_.'boix_promo';
+    public static $img_promo_front = _PS_IMG_.'boix_promo';
+
     public static $img_equipe_dir = _PS_IMG_DIR_.'boix_equipe';
     public static $img_equipe_front = _PS_IMG_.'boix_equipe';
+
+    public static $img_partner_dir = _PS_IMG_DIR_.'boix_partner';
+    public static $img_partner_front = _PS_IMG_.'boix_partner';
 
     /**
      * Module
@@ -77,11 +83,21 @@ class Repository
     /**
      * Installer le dossier dans le repertoire img
      */
-    protected function installFolder()
+    public function installFolder()
     {
         if (!file_exists(self::$img_equipe_dir)) {
             $a = @mkdir(self::$img_equipe_dir, 0777);
             $a &= @chmod(self::$img_equipe_dir, 0777);
+        }
+
+        if (!file_exists(self::$img_partner_dir)) {
+            $a = @mkdir(self::$img_partner_dir, 0777);
+            $a &= @chmod(self::$img_partner_dir, 0777);
+        }
+
+        if (!file_exists(self::$img_promo_dir)) {
+            $a = @mkdir(self::$img_promo_dir, 0777);
+            $a &= @chmod(self::$img_promo_dir, 0777);
         }
         return true;
     }
@@ -128,7 +144,7 @@ class Repository
     /**
      * Installer la base de donné
      */
-    protected function installDatabase()
+    public function installDatabase()
     {
         $sql = array();
 
@@ -149,6 +165,72 @@ class Repository
             `role` VARCHAR(250),
             PRIMARY KEY  (`id_boix_equipe`, `id_lang`)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'boix_promo` (
+            `id_boix_promo` INT(11) NOT NULL AUTO_INCREMENT,
+            `id_store` INT(11) NOT NULL,
+            `active` INT(1) DEFAULT 1,
+            `start_date` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            `end_date` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            `date_add` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (`id_boix_promo`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'boix_promo_lang` (
+            `id_boix_promo` INT(11) NOT NULL,
+            `id_lang` INT(11) NOT NULL,
+            `description` VARCHAR(250),
+            PRIMARY KEY  (`id_boix_promo`, `id_lang`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'boix_partner` (
+            `id_boix_partner` INT(11) NOT NULL AUTO_INCREMENT,
+            `id_store` INT(11) NOT NULL,
+            `partner_name` VARCHAR(250),
+            `partner_link` VARCHAR(250),
+            `active` INT(1) DEFAULT 1,
+            PRIMARY KEY  (`id_boix_partner`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'boix_partner_lang` (
+            `id_boix_partner` INT(11) NOT NULL,
+            `id_lang` INT(11) NOT NULL,
+            `partner_desc` TEXT,
+            PRIMARY KEY  (`id_boix_partner`, `id_lang`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'boix_testimony` (
+            `id_boix_testimony` INT(11) NOT NULL AUTO_INCREMENT,
+            `id_store` INT(11) NOT NULL,
+            `id_product` INT(11) NULL,
+            `note` DECIMAL(20,6),
+            `active` INT(1) DEFAULT 1,
+            `username` VARCHAR(250),
+            PRIMARY KEY  (`id_boix_testimony`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'boix_testimony_lang` (
+            `id_boix_testimony` INT(11) NOT NULL,
+            `id_lang` INT(11) NOT NULL,
+            `comment` TEXT,
+            PRIMARY KEY  (`id_boix_testimony`, `id_lang`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'boix_store_nearby` (
+            `id_store` INT(11) NOT NULL,
+            `id_store_nearby` INT(11) NOT NULL,
+            PRIMARY KEY  (`id_store`, `id_store_nearby`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'boix_store_categories` (
+            `id_store` INT(11) NOT NULL,
+            `id_category` INT(11) NOT NULL,
+            PRIMARY KEY  (`id_store`, `id_category`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'store` 
+        ADD COLUMN `notice_url` VARCHAR(250) NULL DEFAULT NULL;';
         
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -165,10 +247,18 @@ class Repository
     protected function unInstallDatabase()
     {
         $sql = array();
-        
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'vz_boix_equipe`';
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'vz_boix_equipe_lang`';
-       
+
+        $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'vz_boix_promo`';
+        $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'vz_boix_promo_lang`';
+        
+        $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'boix_partner`';
+        $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'boix_testimony`';
+        $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'boix_testimony_lang`';
+        $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'boix_store_nearby`';
+        $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'store` DROP COLUMN `notice_url`;';
+        
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
                 return false;
@@ -184,6 +274,7 @@ class Repository
     protected function registerHooks()
     {
         return $this->module->registerHook('header') &&
+            $this->module->registerHook('actionAdminStoresFormModifier') &&
             $this->module->registerHook('backOfficeHeader')
         ;
     }

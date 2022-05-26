@@ -32,6 +32,7 @@ if (file_exists(_PS_MODULE_DIR_. 'boix_mdf/vendor/autoload.php')) {
     require_once _PS_MODULE_DIR_.  'boix_mdf/vendor/autoload.php';
 }
 
+use Cleandev\BoixMdf\Classes\BoixStore;
 class Boix_mdf extends Module
 {
     protected $config_form = false;
@@ -70,12 +71,27 @@ class Boix_mdf extends Module
                 'class_name'=>'AdminBoixEquipe',
                 'parent'=>'AdminParentStores',
             ),
+            array(
+                'name'=> $this->l('Partenaire'),
+                'class_name'=>'AdminBoixPartner',
+                'parent'=>'AdminParentStores',
+            ),
+            array(
+                'name'=> $this->l('Promo'),
+                'class_name'=>'AdminBoixPromo',
+                'parent'=>'AdminParentStores',
+            ),
+            array(
+                'name'=> $this->l('Avis clients'),
+                'class_name'=>'AdminBoixTestimony',
+                'parent'=>'AdminParentStores',
+            ),
         );
 
         $this->repository = new Cleandev\BoixMdf\Repository($this); 
     
         parent::__construct();
-
+            
         $this->languages = Language::getLanguages();
         $this->displayName = $this->l('Gestion des magasins');
         $this->description = $this->l('Gestion des magasins');
@@ -238,5 +254,13 @@ class Boix_mdf extends Module
     {
         $this->context->controller->addJS($this->_path.'/views/js/front.js');
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
+    }
+
+    public function hookActionAdminStoresFormModifier(&$params) {
+        $id_store = Tools::getValue('id_store', 0);
+        $stores = BoixStore::getStoreNearBy($id_store, $this->context->language->id);
+        $params['fields_value']['stores[]'] = array_map(function($a){
+            return $a['id_store'];
+        }, $stores);
     }
 }
